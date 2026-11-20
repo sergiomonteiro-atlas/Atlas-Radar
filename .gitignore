@@ -1,0 +1,7 @@
+# Dados temporários gerados em runtime
+data/trends_live.json
+data/cortex_export/
+__pycache__/
+*.pyc
+.DS_Store
+Thumbs.db

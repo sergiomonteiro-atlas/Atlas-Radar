@@ -1,0 +1,221 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>AtlasNews Live // AtlasRadar — Central Global 24h</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&family=JetBrains+Mono:wght@400;600;700&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="styles.css" />
+  <!-- Globe.gl (Three.js WebGL HD Globe — MIT License, com fallback automático) -->
+  <script src="https://unpkg.com/globe.gl@2.35.1/dist/globe.gl.min.js" defer></script>
+</head>
+<body>
+  <!-- TOP COMMAND BAR (IDENTIDADE ATLASNEWS) -->
+  <header class="topbar">
+    <div class="brand">
+      <!-- Logo vetorial oficial estilo AtlasNews (A azul + faixa vermelha NEWS) -->
+      <svg class="atlas-logo" viewBox="0 0 46 42" width="34" height="32" aria-label="AtlasNews">
+        <defs>
+          <linearGradient id="atlasBlue" x1="0%" y1="0%" x2="100%" y2="100%">
+            <stop offset="0%" stop-color="#00e1ff" />
+            <stop offset="55%" stop-color="#0080ff" />
+            <stop offset="100%" stop-color="#0038b8" />
+          </linearGradient>
+        </defs>
+        <polygon points="23,2 43,39 32,39 23,21 14,39 3,39" fill="url(#atlasBlue)" />
+        <polygon points="10,27 38,21 35,30 7,36" fill="#e5192c" />
+        <text x="22.5" y="30" text-anchor="middle" fill="#ffffff" font-size="7.5" font-weight="900" font-family="Inter, sans-serif" letter-spacing="0.6" transform="rotate(-12 22.5 28)">NEWS</text>
+      </svg>
+      <div class="brand-text">
+        <div class="brand-line">
+          <span class="brand-title">ATLAS<strong>NEWS</strong></span>
+          <span class="live-badge"><span class="live-dot"></span>LIVE</span>
+        </div>
+        <span class="brand-sub">ATLASRADAR · ATLASHUB.SI</span>
+      </div>
+    </div>
+
+    <div class="clocks">
+      <span class="clock-item"><em>UTC</em> <strong id="clock-utc">--:--</strong></span>
+      <span class="clock-item"><em>BRT</em> <strong id="clock-brt">--:--</strong></span>
+      <span class="clock-item"><em>LIS</em> <strong id="clock-lis">--:--</strong></span>
+      <span class="clock-item"><em>PAR</em> <strong id="clock-par">--:--</strong></span>
+    </div>
+
+    <div class="top-metrics">
+      <div class="metric-pill">
+        <span class="label" data-i18n="metric24h">24H</span>
+        <strong id="metric-24h">0</strong>
+      </div>
+      <div class="metric-pill">
+        <span class="label" data-i18n="metricModels">IA MODELS</span>
+        <strong id="metric-models">0</strong>
+      </div>
+      <div class="metric-pill mcp-pill" title="Endpoint MCP ativo em POST /mcp para Hermes-Agent">
+        <span class="mcp-dot"></span>
+        <span>MCP</span>
+      </div>
+    </div>
+
+    <div class="top-actions">
+      <!-- Seletor de idioma da interface -->
+      <select id="ui-lang-select" class="lang-select" title="Idioma da Interface">
+        <option value="pt-BR" selected>🇧🇷 PT-BR</option>
+        <option value="pt-PT">🇵🇹 PT-PT</option>
+        <option value="fr">🇫🇷 FR</option>
+        <option value="en">🌐 EN</option>
+      </select>
+
+      <div class="mode-switch">
+        <button id="btn-mode-globe" class="mode-btn active" data-mode="globe">🌐 <span data-i18n="modeGlobe">Globo 3D</span></button>
+        <button id="btn-mode-orbital" class="mode-btn" data-mode="orbital">🪐 <span data-i18n="modeOrbital">Orbital</span></button>
+        <button id="btn-mode-tv" class="mode-btn" data-mode="tv">📺 <span data-i18n="modeTv">Live TV</span></button>
+      </div>
+
+      <button id="btn-studio" class="action-btn" title="Modo Estúdio AtlasNews">🎬 <span data-i18n="studioBtn">Estúdio</span></button>
+      <button id="btn-refresh" class="action-btn primary">↻</button>
+    </div>
+  </header>
+
+  <!-- MAIN WORKSPACE -->
+  <main class="grid-layout" id="main-layout">
+    <!-- LEFT SIDEBAR -->
+    <aside class="panel left-panel">
+      <div class="panel-header">
+        <span data-i18n="verticalsTitle">VERTICAIS ATLAS</span>
+        <span class="mono-dim" id="last-sync">--:--</span>
+      </div>
+
+      <div class="search-box">
+        <input type="text" id="search-input" data-i18n-placeholder="searchPlaceholder" placeholder="Filtrar tema, modelo, empresa..." autocomplete="off" />
+      </div>
+
+      <nav class="category-list">
+        <button class="cat-btn active" data-cat="all">
+          <span class="dot dot-all"></span>
+          <span class="cat-name" data-i18n="catAll">Todos os Sinais</span>
+          <span class="cat-count" id="count-all">0</span>
+        </button>
+        <button class="cat-btn" data-cat="ai">
+          <span class="dot dot-ai"></span>
+          <span class="cat-name" data-i18n="catAi">IA &amp; Agentes</span>
+          <span class="cat-count" id="count-ai">0</span>
+        </button>
+        <button class="cat-btn" data-cat="tech">
+          <span class="dot dot-tech"></span>
+          <span class="cat-name" data-i18n="catTech">Tech &amp; Engenharia</span>
+          <span class="cat-count" id="count-tech">0</span>
+        </button>
+        <button class="cat-btn" data-cat="business">
+          <span class="dot dot-business"></span>
+          <span class="cat-name" data-i18n="catBusiness">Negócios &amp; Geopolítica</span>
+          <span class="cat-count" id="count-business">0</span>
+        </button>
+        <button class="cat-btn" data-cat="gaming">
+          <span class="dot dot-gaming"></span>
+          <span class="cat-name" data-i18n="catGaming">Gaming (AtlasNews)</span>
+          <span class="cat-count" id="count-gaming">0</span>
+        </button>
+      </nav>
+
+      <div class="section-label" data-i18n="feedLangTitle">IDIOMA DAS FONTES</div>
+      <div class="lang-filter" id="feed-lang-filter">
+        <button class="lf-btn active" data-lang="all">ALL</button>
+        <button class="lf-btn" data-lang="pt">PT</button>
+        <button class="lf-btn" data-lang="fr">FR</button>
+        <button class="lf-btn" data-lang="en">EN</button>
+      </div>
+
+      <div class="section-label" data-i18n="windowTitle">JANELA TEMPORAL</div>
+      <div class="window-switch">
+        <button class="win-btn" data-hours="6">6H</button>
+        <button class="win-btn active" data-hours="24">24H</button>
+        <button class="win-btn" data-hours="72">72H</button>
+      </div>
+
+      <div class="section-label" data-i18n="sensorsTitle">SENSORES ATIVOS</div>
+      <div class="sensors-list" id="sensors-list"></div>
+
+      <div class="atlas-footer-card">
+        <div class="atlas-badge">ATLAS-HARNESS · MÓDULO 6</div>
+        <p data-i18n="harnessNote">Conectado via <code>POST /mcp</code> ao <strong>Hermes-Agent</strong> e pronto para exportar ao <strong>Atlas-Cortex</strong>.</p>
+      </div>
+    </aside>
+
+    <!-- CENTER STAGE: GLOBE 3D / ORBITAL / LIVE TV -->
+    <section class="stage-panel">
+      <!-- 1. Globe.gl HD WebGL container -->
+      <div id="globe-container" class="stage-view"></div>
+
+      <!-- 2. Orbital / Fallback Canvas -->
+      <canvas id="radar-canvas" class="stage-view hidden"></canvas>
+
+      <!-- 3. Live TV Streaming Wall -->
+      <div id="tv-stage" class="stage-view tv-stage hidden">
+        <div class="tv-toolbar">
+          <div class="tv-channels" id="tv-channel-buttons"></div>
+          <div class="tv-layout-btns">
+            <button id="btn-tv-single" class="win-btn active">1X</button>
+            <button id="btn-tv-grid" class="win-btn">2×2</button>
+          </div>
+        </div>
+        <div id="tv-players" class="tv-players single"></div>
+      </div>
+
+      <!-- HUD Overlay -->
+      <div class="stage-hud-top" id="stage-hud">
+        <div class="hud-tag" id="hud-mode-label">ATLASNEWS LIVE · GLOBO 3D NOTURNO</div>
+        <div class="hud-hint" id="hud-hint">Arraste para girar · Scroll para zoom · Clique num sinal</div>
+      </div>
+
+      <!-- INSPECTOR CARD -->
+      <div class="inspector hidden" id="inspector">
+        <div class="inspector-top">
+          <span class="badge" id="ins-cat">AI</span>
+          <span class="mono-dim" id="ins-meta">Fonte · Hub · há 1h</span>
+          <button class="close-btn" id="ins-close" title="Fechar">✕</button>
+        </div>
+        <h3 id="ins-title">Título do Sinal</h3>
+        <p id="ins-summary">Resumo do sinal.</p>
+        <div class="inspector-actions">
+          <button class="ins-btn cortex" id="btn-export-cortex">🌌 <span data-i18n="btnCortex">Salvar no Atlas-Cortex (.md)</span></button>
+          <button class="ins-btn news" id="btn-copy-pauta">🎬 <span data-i18n="btnPauta">Copiar Pauta AtlasNews</span></button>
+          <button class="ins-btn hermes" id="btn-copy-hermes">🤖 <span data-i18n="btnHermes">Comando Hermes</span></button>
+          <a class="ins-btn link" id="ins-link" href="#" target="_blank" rel="noopener">↗ <span data-i18n="btnOpen">Abrir Fonte</span></a>
+        </div>
+      </div>
+    </section>
+
+    <!-- RIGHT SIDEBAR: LIVE FEED + AI MODELS LIVE -->
+    <aside class="panel right-panel">
+      <div class="right-tabs">
+        <button class="rtab active" data-rtab="feed">📡 <span data-i18n="tabFeed">FEED LIVE</span> <em id="feed-count">0</em></button>
+        <button class="rtab" data-rtab="models">🤖 <span data-i18n="tabModels">MODELOS IA</span> <em id="models-count">0</em></button>
+      </div>
+
+      <div class="feed-list" id="feed-list"></div>
+      <div class="models-list hidden" id="models-list"></div>
+    </aside>
+  </main>
+
+  <!-- BREAKING NEWS TICKER (ATLASNEWS LIVE) -->
+  <footer class="ticker-bar">
+    <div class="ticker-label">
+      <span class="live-dot small"></span>
+      <span>ATLASNEWS LIVE</span>
+    </div>
+    <div class="ticker-track">
+      <div class="ticker-content" id="ticker-content">
+        Carregando sinais globais do AtlasRadar...
+      </div>
+    </div>
+    <div class="ticker-brand">AtlasHub.SI · Club.Atlas-SI.com</div>
+  </footer>
+
+  <div class="toast" id="toast"></div>
+
+  <script src="app.js"></script>
+</body>
+</html>
