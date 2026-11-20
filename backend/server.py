@@ -25,6 +25,7 @@ import live_tv  # noqa: E402
 
 BASE_DIR = Path(__file__).resolve().parent.parent
 WEB_DIR = BASE_DIR / "web"
+HOST = os.environ.get("ATLAS_RADAR_HOST", "127.0.0.1")
 PORT = int(os.environ.get("ATLAS_RADAR_PORT", "8787"))
 AUTO_REFRESH_SECONDS = int(os.environ.get("ATLAS_RADAR_REFRESH_SEC", "900"))
 
@@ -389,9 +390,9 @@ def main() -> None:
     t = threading.Thread(target=_auto_refresh_loop, daemon=True)
     t.start()
 
-    server = ThreadingHTTPServer(("127.0.0.1", PORT), AtlasRadarHandler)
-    print(f"[AtlasRadar & AtlasNews Live] Online em: http://localhost:{PORT}")
-    print(f"[AtlasRadar MCP Endpoint]     POST       http://localhost:{PORT}/mcp")
+    server = ThreadingHTTPServer((HOST, PORT), AtlasRadarHandler)
+    print(f"[AtlasRadar & AtlasNews Live] Online em: http://{HOST}:{PORT}")
+    print(f"[AtlasRadar MCP Endpoint]     POST       http://{HOST}:{PORT}/mcp")
     try:
         server.serve_forever()
     except KeyboardInterrupt:
