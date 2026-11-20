@@ -353,6 +353,61 @@ def fetch_ai_models_live() -> tuple[list[dict[str, Any]], dict[str, Any]]:
     return models, status
 
 
+def detect_new_terms(signals: list[dict[str, Any]], ai_models: list[dict[str, Any]]) -> list[dict[str, Any]]:
+    """
+    Sensor 'Termos Novos Hoje' (inspirado no new-term-radar · MIT):
+    Detecta nomes de novos modelos, produtos, versões e termos emergentes de IA
+    captados nas últimas 24h no Hugging Face, GitHub e notícias.
+    """
+    terms: dict[str, dict[str, Any]] = {}
+
+    # 1. Novos modelos em alta no Hugging Face
+    for idx, m in enumerate(ai_models[:10]):
+        term = m["name"]
+        key = term.lower()
+        terms[key] = {
+            "term": term,
+            "kind": "model",
+            "source": f"HuggingFace ({m['org']})",
+            "score": max(65, 98 - idx * 3),
+            "mentions": 1,
+            "summary": f"Modelo {m['pipeline']} em alta ({m['likes']:,} likes · {m['downloads']:,} downloads).",
+            "url": m["url"],
+        }
+
+    # 2. Termos/versões emergentes nos sinais das últimas 24h (ex: GPT-5, Qwen3.8, LTX-2.5, Claude 4, Hermes...)
+    pattern = re.compile(
+        r"\b((?:GPT|Claude|Gemini|Llama|Qwen|DeepSeek|Mistral|Hermes|Grok|Sora|Veo|LTX|OpenClaw|Flux|Kling|MCP|Agent|Phi|Gemma|Nova|Command|Sonnet|Opus|Haiku|Riemann)[A-Za-z0-9.\-_]{0,18}(?:\s+[0-9]+(?:\.[0-9]+)?[A-Za-z]?)?)\b"
+    )
+    stop_terms = {"ai", "agent", "agents", "model", "models", "google", "meta", "openai"}
+
+    for s in signals:
+        if s.get("age_hours", 99) > 36:
+            continue
+        found = set(m.group(1).strip() for m in pattern.finditer(s.get("title", "")))
+        for raw_t in found:
+            clean_t = raw_t.strip(" .-_")
+            key = clean_t.lower()
+            if len(clean_t) < 3 or key in stop_terms:
+                continue
+            if key not in terms:
+                terms[key] = {
+                    "term": clean_t,
+                    "kind": "repo" if s.get("source") == "GitHub Radar" else "term",
+                    "source": s.get("source", "AtlasRadar"),
+                    "score": min(99, int(s.get("heat_score", 70))),
+                    "mentions": 1,
+                    "summary": s.get("title", ""),
+                    "url": s.get("url", ""),
+                }
+            else:
+                terms[key]["mentions"] += 1
+                terms[key]["score"] = min(99, terms[key]["score"] + 4)
+
+    ranked = sorted(terms.values(), key=lambda x: (x["score"], x["mentions"]), reverse=True)
+    return ranked[:18]
+
+
 def deduplicate(items: list[dict[str, Any]]) -> list[dict[str, Any]]:
     seen_urls: set[str] = set()
     seen_titles: set[str] = set()
@@ -401,9 +456,11 @@ def collect_all() -> dict[str, Any]:
         if it["age_hours"] <= 24:
             last_24h += 1
 
+    new_terms = detect_new_terms(unique_items, ai_models)
+
     payload = {
         "meta": {
-            "engine": "AtlasRadar v0.2 (Broadcast & AI Edition · Atlas-SI)",
+            "engine": "AtlasRadar v0.3 (Broadcast + AI Models + New Terms · Atlas-SI)",
             "updated_at": datetime.now(timezone.utc).isoformat(),
             "elapsed_seconds": round(time.time() - started, 2),
             "total_signals": len(unique_items),
@@ -413,9 +470,11 @@ def collect_all() -> dict[str, Any]:
             "counts": counts,
             "langs": langs,
             "ai_models_count": len(ai_models),
+            "new_terms_count": len(new_terms),
         },
         "sources": sorted(sources_status, key=lambda x: x["source"]),
         "ai_models": ai_models,
+        "new_terms": new_terms,
         "signals": unique_items[:160],
     }
 

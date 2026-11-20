@@ -26,8 +26,9 @@
       windowTitle: "JANELA TEMPORAL",
       sensorsTitle: "SENSORES ATIVOS",
       harnessNote: "Conectado via <code>POST /mcp</code> ao <strong>Hermes-Agent</strong> e pronto para exportar ao <strong>Atlas-Cortex</strong>.",
-      tabFeed: "FEED LIVE",
-      tabModels: "MODELOS IA",
+      tabFeed: "FEED",
+      tabModels: "MODELOS",
+      tabTerms: "TERMOS",
       btnCortex: "Salvar no Atlas-Cortex (.md)",
       btnPauta: "Copiar Pauta AtlasNews",
       btnHermes: "Comando Hermes",
@@ -57,8 +58,9 @@
       windowTitle: "JANELA TEMPORAL",
       sensorsTitle: "SENSORES ATIVOS",
       harnessNote: "Ligado via <code>POST /mcp</code> ao <strong>Hermes-Agent</strong> e pronto a exportar para o <strong>Atlas-Cortex</strong>.",
-      tabFeed: "FEED DIRETO",
-      tabModels: "MODELOS IA",
+      tabFeed: "DIRETO",
+      tabModels: "MODELOS",
+      tabTerms: "TERMOS",
       btnCortex: "Guardar no Atlas-Cortex (.md)",
       btnPauta: "Copiar Pauta AtlasNews",
       btnHermes: "Comando Hermes",
@@ -88,8 +90,9 @@
       windowTitle: "FENÊTRE TEMPORELLE",
       sensorsTitle: "CAPTEURS ACTIFS",
       harnessNote: "Connecté via <code>POST /mcp</code> à <strong>Hermes-Agent</strong> et prêt à exporter vers <strong>Atlas-Cortex</strong>.",
-      tabFeed: "FLUX LIVE",
-      tabModels: "MODÈLES IA",
+      tabFeed: "FLUX",
+      tabModels: "MODÈLES",
+      tabTerms: "TERMES",
       btnCortex: "Sauver dans Atlas-Cortex (.md)",
       btnPauta: "Copier Sujet AtlasNews",
       btnHermes: "Commande Hermes",
@@ -119,8 +122,9 @@
       windowTitle: "TIME WINDOW",
       sensorsTitle: "ACTIVE SENSORS",
       harnessNote: "Connected via <code>POST /mcp</code> to <strong>Hermes-Agent</strong> and ready to export to <strong>Atlas-Cortex</strong>.",
-      tabFeed: "LIVE FEED",
-      tabModels: "AI MODELS",
+      tabFeed: "FEED",
+      tabModels: "MODELS",
+      tabTerms: "TERMS",
       btnCortex: "Save to Atlas-Cortex (.md)",
       btnPauta: "Copy AtlasNews Brief",
       btnHermes: "Hermes Command",
@@ -139,6 +143,7 @@
     meta: {},
     sources: [],
     aiModels: [],
+    newTerms: [],
     tvChannels: [],
     tvLoaded: false,
     allSignals: [],
@@ -167,6 +172,7 @@
   const stageHud = document.getElementById("stage-hud");
   const feedList = document.getElementById("feed-list");
   const modelsList = document.getElementById("models-list");
+  const termsList = document.getElementById("terms-list");
   const sensorsList = document.getElementById("sensors-list");
   const tickerEl = document.getElementById("ticker-content");
   const inspector = document.getElementById("inspector");
@@ -367,11 +373,13 @@
       state.meta = data.meta || {};
       state.sources = data.sources || [];
       state.aiModels = data.ai_models || [];
+      state.newTerms = data.new_terms || [];
       state.allSignals = data.signals || [];
 
       renderMeta();
       renderSensors();
       renderModels();
+      renderTerms();
       applyFilters();
       if (forceRefresh) {
         showToast(`AtlasRadar: ${state.meta.signals_24h || 0} sinais (24h) · ${state.aiModels.length} modelos IA`);
@@ -447,6 +455,36 @@
         </div>
       `;
       modelsList.appendChild(a);
+    });
+  }
+
+  function renderTerms() {
+    document.getElementById("terms-count").textContent = state.newTerms.length;
+    termsList.innerHTML = "";
+    if (!state.newTerms.length) {
+      termsList.innerHTML = `<div class="mono-dim" style="padding:18px;text-align:center;">Sem termos novos detectados ainda.</div>`;
+      return;
+    }
+    state.newTerms.forEach((item, i) => {
+      const card = document.createElement("a");
+      card.className = "model-card";
+      card.href = item.url || "#";
+      card.target = "_blank";
+      card.rel = "noopener";
+      const kindBadge = item.kind === "model" ? "MODELO" : item.kind === "repo" ? "REPO" : "TERMO 24H";
+      card.innerHTML = `
+        <div class="model-top">
+          <span class="model-org">🔥 #${i + 1} · ${escapeHtml(kindBadge)}</span>
+          <span class="model-rank">SCORE ${item.score}</span>
+        </div>
+        <div class="model-name">${escapeHtml(item.term)}</div>
+        <div style="font-size:11px;color:#b8d2f8;line-height:1.4;margin-bottom:6px;">${escapeHtml(item.summary)}</div>
+        <div class="model-stats">
+          <span>${escapeHtml(item.source)}</span>
+          <span>${item.mentions}× menções</span>
+        </div>
+      `;
+      termsList.appendChild(card);
     });
   }
 
@@ -797,9 +835,10 @@
     btn.addEventListener("click", () => {
       document.querySelectorAll(".rtab").forEach((b) => b.classList.remove("active"));
       btn.classList.add("active");
-      const isFeed = btn.dataset.rtab === "feed";
-      feedList.classList.toggle("hidden", !isFeed);
-      modelsList.classList.toggle("hidden", isFeed);
+      const tab = btn.dataset.rtab;
+      feedList.classList.toggle("hidden", tab !== "feed");
+      modelsList.classList.toggle("hidden", tab !== "models");
+      termsList.classList.toggle("hidden", tab !== "terms");
     })
   );
 

@@ -128,6 +128,16 @@ MCP_TOOLS = [
             },
         },
     },
+    {
+        "name": "atlas_radar_get_new_terms",
+        "description": "Sensor 'Termos Novos Hoje': retorna nomes emergentes de novos modelos, produtos e repos de IA detectados nas últimas 24h.",
+        "inputSchema": {
+            "type": "object",
+            "properties": {
+                "limit": {"type": "integer", "default": 15},
+            },
+        },
+    },
 ]
 
 
@@ -222,6 +232,17 @@ def handle_mcp_request(body: dict[str, Any]) -> dict[str, Any]:
                 },
             }
 
+        if name == "atlas_radar_get_new_terms":
+            lim = int(args.get("limit", 15))
+            terms = payload.get("new_terms", [])[:lim]
+            return {
+                "jsonrpc": "2.0",
+                "id": req_id,
+                "result": {
+                    "content": [{"type": "text", "text": json.dumps(terms, ensure_ascii=False, indent=2)}]
+                },
+            }
+
         return {
             "jsonrpc": "2.0",
             "id": req_id,
@@ -294,6 +315,7 @@ class AtlasRadarHandler(BaseHTTPRequestHandler):
                     "meta": payload.get("meta", {}),
                     "sources": payload.get("sources", []),
                     "ai_models": payload.get("ai_models", []),
+                    "new_terms": payload.get("new_terms", []),
                     "signals": filtered,
                 }
             )

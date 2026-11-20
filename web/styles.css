@@ -610,7 +610,7 @@ html, body {
 /* RIGHT PANEL TABS */
 .right-tabs {
   display: grid;
-  grid-template-columns: 1fr 1fr;
+  grid-template-columns: repeat(3, 1fr);
   border-bottom: 1px solid var(--border);
   background: rgba(3, 12, 28, 0.7);
 }
@@ -643,7 +643,7 @@ html, body {
   background: rgba(0, 153, 255, 0.12);
 }
 
-.feed-list, .models-list {
+.feed-list, .models-list, .terms-list {
   flex: 1;
   overflow-y: auto;
   padding: 10px;
@@ -652,7 +652,7 @@ html, body {
   gap: 8px;
 }
 
-.models-list.hidden, .feed-list.hidden { display: none; }
+.models-list.hidden, .feed-list.hidden, .terms-list.hidden { display: none; }
 
 .feed-card, .model-card {
   padding: 10px 11px;
