@@ -47,4 +47,4 @@ git pull
 ---
 
 ## Comunidade & Ecossistema
-Desenvolvido por **AtlasHub.SI** · Comunidade oficial: **[Club.Atlas-SI.com](https://Club.Atlas-SI.com)**
+Desenvolvido por **AtlasHub.SI** · Comunidade oficial: **[club.atlashub.si](https://club.atlashub.si)**

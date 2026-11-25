@@ -871,7 +871,7 @@
   document.getElementById("btn-copy-pauta").addEventListener("click", () => {
     if (!state.selected) return;
     const s = state.selected;
-    const text = `[PAUTA ATLASNEWS · ${s.category.toUpperCase()}]\nTítulo: ${s.title}\nFonte: ${s.source} (${s.url})\nResumo: ${s.summary}\nScore: ${s.heat_score}/99\nDestino: AtlasNews / AtlasClub (Club.Atlas-SI.com)`;
+    const text = `[PAUTA ATLASNEWS · ${s.category.toUpperCase()}]\nTítulo: ${s.title}\nFonte: ${s.source} (${s.url})\nResumo: ${s.summary}\nScore: ${s.heat_score}/99\nDestino: AtlasNews / AtlasClub (club.atlashub.si)`;
     navigator.clipboard.writeText(text).then(() => showToast("🎬 Pauta AtlasNews copiada!"));
   });
 

@@ -29,7 +29,7 @@ DATA_DIR = BASE_DIR / "data"
 CORTEX_EXPORT_DIR = DATA_DIR / "cortex_export"
 OUTPUT_FILE = DATA_DIR / "trends_live.json"
 
-USER_AGENT = "AtlasRadar/0.2 (+https://Club.Atlas-SI.com; AtlasNews Live Engine)"
+USER_AGENT = "AtlasRadar/0.2 (+https://club.atlashub.si; AtlasNews Live Engine)"
 REQUEST_TIMEOUT = 10
 
 HUBS: dict[str, dict[str, Any]] = {
@@ -517,7 +517,7 @@ tags:
 
 ## Ações Sugeridas (Atlas-Harness / AtlasNews)
 - [ ] Avaliar pauta para **AtlasNews** (Carrossel / Vídeo Curto)
-- [ ] Gerar tutorial ou análise para membros do **AtlasClub** (`Club.Atlas-SI.com`)
+- [ ] Gerar tutorial ou análise para membros do **AtlasClub** (`club.atlashub.si`)
 - [ ] Conectar na **Atlas-Cortex Galaxy 3D**
 """
     target.write_text(md, encoding="utf-8")

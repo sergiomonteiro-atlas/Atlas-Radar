@@ -18,9 +18,10 @@ from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from pathlib import Path
 from typing import Any
 
-# Permite importar collector e live_tv independentemente do cwd
+# Permite importar collector, live_tv e curator independentemente do cwd
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 import collector  # noqa: E402
+import curator  # noqa: E402
 import live_tv  # noqa: E402
 
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -139,6 +140,18 @@ MCP_TOOLS = [
             },
         },
     },
+    {
+        "name": "atlas_radar_generate_club_digest",
+        "description": "Gera a curadoria diária em Markdown para as comunidades Free (PT/FR) do AtlasClub (club.atlashub.si) e opcionalmente envia para o Discord Webhook.",
+        "inputSchema": {
+            "type": "object",
+            "properties": {
+                "lang": {"type": "string", "enum": ["pt", "fr"], "default": "pt"},
+                "limit": {"type": "integer", "default": 4},
+                "post_to_discord": {"type": "boolean", "default": False},
+            },
+        },
+    },
 ]
 
 
@@ -242,6 +255,19 @@ def handle_mcp_request(body: dict[str, Any]) -> dict[str, Any]:
                 "result": {
                     "content": [{"type": "text", "text": json.dumps(terms, ensure_ascii=False, indent=2)}]
                 },
+            }
+
+        if name == "atlas_radar_generate_club_digest":
+            lang = str(args.get("lang", "pt"))
+            lim = int(args.get("limit", 4))
+            post_discord = bool(args.get("post_to_discord", False))
+            md = curator.build_club_digest(payload, lang=lang, limit=lim)
+            discord_res = curator.send_to_discord(payload, lang=lang, limit=lim, dry_run=not post_discord)
+            out = {"club_markdown": md, "discord": discord_res}
+            return {
+                "jsonrpc": "2.0",
+                "id": req_id,
+                "result": {"content": [{"type": "text", "text": json.dumps(out, ensure_ascii=False, indent=2)}]},
             }
 
         return {
@@ -356,6 +382,24 @@ class AtlasRadarHandler(BaseHTTPRequestHandler):
                 return
             saved = collector.export_signal_to_cortex(sig)
             self._send_json({"status": "exported", "file": saved.name, "path": str(saved)})
+            return
+
+        if path == "/api/curate":
+            body = self._read_json_body()
+            lang = str(body.get("lang", "pt"))
+            lim = int(body.get("limit", 4))
+            post_discord = bool(body.get("post_to_discord", False))
+            webhook_url = body.get("discord_webhook_url")
+            payload = load_or_collect()
+            md = curator.build_club_digest(payload, lang=lang, limit=lim)
+            discord_res = curator.send_to_discord(
+                payload,
+                webhook_url=webhook_url,
+                lang=lang,
+                limit=lim,
+                dry_run=not post_discord,
+            )
+            self._send_json({"club_markdown": md, "discord": discord_res})
             return
 
         if path == "/mcp":
